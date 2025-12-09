@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Memory Game</title>
+    <!-- Bootstrap CSS -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+  </head>
+  <body class="container mt-5">
+    <!-- Title -->
+    <header>
+      <h1 class="fw-bold">Memory Game</h1>
+      <p class="text-muted mb-4">
+        Click on the cards to flip them and find the matching pairs with as
+        little flips as possible.
+      </p>
+    </header>
+
+    <div class="row justify" id="formSection">
+      <div class="col-md-6">
+        <!-- Name Input -->
+        <div class="mb-3">
+          <label for="playerName" class="form-label">Your name:</label>
+          <input
+            type="text"
+            class="form-control"
+            id="playerName"
+            placeholder="your name including letters and digits only"
+          />
+        </div>
+
+        <!-- Buttons -->
+        <div class="d-flex gap-2">
+          <button type="button" class="btn btn-primary" id="playButton">
+            Play
+          </button>
+          <button
+            type="button"
+            class="btn btn-light"
+            data-bs-toggle="modal"
+            data-bs-target="#settingsModal"
+          >
+            Settings
+          </button>
+          <button type="button" class="btn btn-light">High Scores</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div
+      class="modal fade"
+      id="settingsModal"
+      tabindex="-1"
+      aria-labelledby="settingsModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="settingsModalLabel">Game Settings</h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <!-- Number of rows -->
+            <div class="mb-3">
+              <label for="numRows" class="form-label">Number of rows:</label>
+              <select class="form-select" id="numRows">
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4" selected>4</option>
+                <option value="5">5</option>
+              </select>
+            </div>
+
+            <!-- Number of columns -->
+            <div class="mb-3">
+              <label for="numColumns" class="form-label"
+                >Number of columns:</label
+              >
+              <select class="form-select" id="numColumns">
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4" selected>4</option>
+                <option value="5">5</option>
+              </select>
+            </div>
+
+            <!-- Validation Error Message -->
+            <p id="validationError" class="text-danger" style="display: none">
+              Number of cards (rows X columns) must be even, please correct your
+              choice.
+            </p>
+
+            <!-- Delay in seconds -->
+            <div class="mb-3">
+              <label for="delay" class="form-label">Delay (in seconds):</label>
+              <select class="form-select" id="delay">
+                <option value="0.5">0.5</option>
+                <option value="1">1</option>
+                <option value="1.5">1.5</option>
+                <option value="2">2</option>
+              </select>
+            </div>
+          </div>
+          <div class="modal-footer border-0">
+            <button type="button" class="btn btn-primary">Save Settings</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- NASA Images Container -->
+    <div class="row mt-4" id="nasaImagesContainer">
+      <h3>NASA Astronomy Pictures</h3>
+      <div class="row" id="imagesRow"></div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="script.js"></script>
+  </body>
+</html>
