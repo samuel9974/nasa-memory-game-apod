@@ -8,8 +8,8 @@ const DEFAULT_COLS = 4;
 function getImageCount() {
   const rows = parseInt(numRows.value) || DEFAULT_ROWS;
   const cols = parseInt(numColumns.value) || DEFAULT_COLS;
-
-  return rows * cols;
+  // Divide by 2 because each image will be duplicated to create pairs
+  return (rows * cols) / 2;
 }
 
 function buildApiUrl(count) {
@@ -19,18 +19,35 @@ function buildApiUrl(count) {
 async function fetchNasaImages() {
   const count = getImageCount();
   const response = await fetch(buildApiUrl(count));
-  
+
   if (!response.ok) {
     // API error (e.g., invalid key, rate limit)
     throw new Error("API");
   }
-  
+
   const data = await response.json();
   return data;
 }
 
 function filterImages(images) {
   return images.filter((image) => image.media_type === "image");
+}
+
+// Fisher-Yates shuffle algorithm for random card arrangement
+function shuffleArray(array) {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
+
+// Create pairs of cards and shuffle them
+function createPairs(images) {
+  const pairs = [...images, ...images];
+  const shuffledPairs = shuffleArray(pairs);
+  return shuffledPairs;
 }
 
 // ============================================
@@ -43,22 +60,31 @@ const playerName = document.getElementById("playerName");
 const numRows = document.getElementById("numRows");
 const numColumns = document.getElementById("numColumns");
 const validationError = document.getElementById("validationError");
-const loadingModal = new bootstrap.Modal(document.getElementById("loadingModal"));
+const loadingModal = new bootstrap.Modal(
+  document.getElementById("loadingModal")
+);
 const errorModal = new bootstrap.Modal(document.getElementById("errorModal"));
 const errorMessage = document.getElementById("errorMessage");
 const retryButton = document.getElementById("retryButton");
 
+function getColumnClass() {
+  const cols = parseInt(numColumns.value) || DEFAULT_COLS;
+  // Bootstrap uses 12-column grid, calculate width per card
+  const colSize = Math.floor(12 / cols);
+  return `col-${colSize} mb-3`;
+}
+
 function createImageCard(image) {
   const col = document.createElement("div");
-  col.className = "col-md-4 mb-3";
+  col.className = getColumnClass();
   col.innerHTML = `
-    <div class="flip-card">
-      <div class="flip-card-inner">
-        <div class="flip-card-front">
-          <img src="${image.url}" alt="NASA APOD">
+    <div class="flip-card flipped">
+      <div class="flip-card-inner w-100">
+        <div class="flip-card-front w-100 h-100 rounded-3 overflow-hidden">
+          <img src="${image.url}" alt="NASA APOD" class="w-100 h-100 object-fit-cover">
         </div>
-        <div class="flip-card-back">
-          <span>?</span>
+        <div class="flip-card-back w-100 h-100 rounded-3 bg-warning d-flex justify-content-center align-items-center">
+          <span class="fs-1 fw-bold text-dark">?</span>
         </div>
       </div>
     </div>
@@ -85,13 +111,15 @@ function displayImages(images) {
 // ============================================
 function showError(errorType) {
   let message;
-  
+
   if (errorType === "network") {
-    message = "An error occurred while fetching images, it might be a network issue (e.g., no internet). Please try again later.";
+    message =
+      "An error occurred while fetching images, it might be a network issue (e.g., no internet). Please try again later.";
   } else {
-    message = "An error occurred with the NASA API (their service may not be available right now!). Please try again later.";
+    message =
+      "An error occurred with the NASA API (their service may not be available right now!). Please try again later.";
   }
-  
+
   errorMessage.textContent = message;
   errorModal.show();
 }
@@ -121,7 +149,9 @@ async function handlePlayClick() {
   try {
     const data = await fetchNasaImages();
     const filteredImages = filterImages(data);
-    displayImages(filteredImages);
+    // Create pairs and shuffle using Fisher-Yates
+    const shuffledPairs = createPairs(filteredImages);
+    displayImages(shuffledPairs);
   } catch (error) {
     // Determine error type
     if (error.message === "API") {
