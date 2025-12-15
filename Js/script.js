@@ -5,6 +5,41 @@ const API_KEY = "5L4zgX5wTupy0j22joETfoZccJgdmAJUcoiZ6byy";
 const DEFAULT_ROWS = 4;
 const DEFAULT_COLS = 4;
 
+// ============================================
+// GAME STATE - Variables to track game progress
+// ============================================
+let flippedCards = []; // Array to store currently flipped cards (max 2 at a time)
+let matchedPairs = 0; // Counter for successfully matched pairs
+let totalPairs = 0; // Total number of pairs needed to win
+let flipCount = 0; // Total number of card flips (for scoring)
+let isChecking = false; // Flag to prevent clicks while checking for match
+let gameTimer = null; // Reference to the timer interval
+let elapsedSeconds = 0; // Time elapsed since game started
+let gameStarted = false; // Flag to know if first card was clicked
+
+// Function to reset all game state (called when starting new game)
+function resetGameState() {
+  flippedCards = [];
+  matchedPairs = 0;
+  flipCount = 0;
+  isChecking = false;
+  elapsedSeconds = 0;
+  gameStarted = false;
+
+  // Stop any existing timer
+  if (gameTimer) {
+    clearInterval(gameTimer);
+    gameTimer = null;
+  }
+}
+
+// Get the delay setting from the dropdown (in milliseconds)
+function getDelayMs() {
+  const delaySelect = document.getElementById("delay");
+  const delaySeconds = parseFloat(delaySelect.value) || 1;
+  return delaySeconds * 1000; // Convert to milliseconds
+}
+
 function getImageCount() {
   const rows = parseInt(numRows.value) || DEFAULT_ROWS;
   const cols = parseInt(numColumns.value) || DEFAULT_COLS;
@@ -77,8 +112,10 @@ function getColumnClass() {
 function createImageCard(image) {
   const col = document.createElement("div");
   col.className = getColumnClass();
+
+  // Added data-image-url attribute to identify matching cards
   col.innerHTML = `
-    <div class="flip-card flipped">
+    <div class="flip-card flipped" data-image-url="${image.url}">
       <div class="flip-card-inner w-100">
         <div class="flip-card-front w-100 h-100 rounded-3 overflow-hidden">
           <img src="${image.url}" alt="NASA APOD" class="w-100 h-100 object-fit-cover">
@@ -104,6 +141,9 @@ function displayImages(images) {
     const card = createImageCard(image);
     imagesRow.appendChild(card);
   });
+
+  // Set total pairs for win condition
+  totalPairs = images.length / 2;
 }
 
 // ============================================
@@ -148,6 +188,7 @@ async function handlePlayClick() {
 
   try {
     const data = await fetchNasaImages();
+
     const filteredImages = filterImages(data);
     // Create pairs and shuffle using Fisher-Yates
     const shuffledPairs = createPairs(filteredImages);
