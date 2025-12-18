@@ -95,9 +95,7 @@ const playerName = document.getElementById("playerName");
 const numRows = document.getElementById("numRows");
 const numColumns = document.getElementById("numColumns");
 const validationError = document.getElementById("validationError");
-const loadingModal = new bootstrap.Modal(
-  document.getElementById("loadingModal")
-);
+const loadingModal = new bootstrap.Modal(document.getElementById("loadingModal"));
 const errorModal = new bootstrap.Modal(document.getElementById("errorModal"));
 const errorMessage = document.getElementById("errorMessage");
 const retryButton = document.getElementById("retryButton");
@@ -128,7 +126,7 @@ function createImageCard(image) {
   `;
 
   // Add click event to flip the card
-  const flipCard = col.querySelector(".flip-card");
+  const flipCard = col.querySelector(".flip-card ");
   flipCard.addEventListener("click", () => handleCardClick(flipCard));
 
   return col;
@@ -165,7 +163,51 @@ function showError(errorType) {
 }
 
 function handleCardClick(card) {
-  card.classList.toggle("flipped");
+  // Validation: prevent invalid clicks
+  if (isChecking) return; // Don't allow clicks while checking for match
+  if (!card.classList.contains("flipped")) return; // Only allow clicking face-down cards
+  if (card.classList.contains("matched")) return; // Don't allow clicking matched cards
+  if (flippedCards.includes(card)) return; // Don't allow clicking the same card twice
+
+  // Flip the card (remove flipped class to show image)
+  card.classList.remove("flipped");
+  flippedCards.push(card);
+  flipCount++;
+
+  // If two cards are flipped, check for match
+  if (flippedCards.length === 2) {
+    isChecking = true;
+    const [firstCard, secondCard] = flippedCards;
+    const firstImageUrl = firstCard.getAttribute("data-image-url");
+    const secondImageUrl = secondCard.getAttribute("data-image-url");
+    if (firstImageUrl === secondImageUrl) {
+      handleMatch(firstCard, secondCard);
+    } else {
+      handleNoMatch(firstCard, secondCard);
+    }
+  }
+}
+
+// Handle when two cards match
+function handleMatch(firstCard, secondCard) {
+  firstCard.classList.add("matched");
+  secondCard.classList.add("matched");
+  matchedPairs++;
+  flippedCards = [];
+  isChecking = false;
+  // Next step: update stats and check win condition
+}
+
+// Handle when two cards do not match
+function handleNoMatch(firstCard, secondCard) {
+  const delay = getDelayMs();
+  setTimeout(() => {
+    firstCard.classList.add("flipped");
+    secondCard.classList.add("flipped");
+    flippedCards = [];
+    isChecking = false;
+    // Next step: allow player to continue
+  }, delay);
 }
 
 function validateSettings() {
