@@ -1,6 +1,3 @@
-// ============================================
-// TASKS - Data management and business logic
-// ============================================
 const API_KEY = "5L4zgX5wTupy0j22joETfoZccJgdmAJUcoiZ6byy";
 const DEFAULT_ROWS = 4;
 const DEFAULT_COLS = 4;
@@ -16,6 +13,10 @@ let isChecking = false; // Flag to prevent clicks while checking for match
 let gameTimer = null; // Reference to the timer interval
 let elapsedSeconds = 0; // Time elapsed since game started
 let gameStarted = false; // Flag to know if first card was clicked
+
+// ============================================
+// TASKS - Data management and business logic
+// ============================================
 
 // Function to reset all game state (called when starting new game)
 function resetGameState() {
@@ -195,7 +196,8 @@ function handleMatch(firstCard, secondCard) {
   matchedPairs++;
   flippedCards = [];
   isChecking = false;
-  // Next step: update stats and check win condition
+  updateStatsDisplay();
+  checkWinCondition();
 }
 
 // Handle when two cards do not match
@@ -209,6 +211,7 @@ function handleNoMatch(firstCard, secondCard) {
     // Next step: allow player to continue
   }, delay);
 }
+
 
 function validateSettings() {
   const rows = parseInt(numRows.value) || DEFAULT_ROWS;
@@ -224,17 +227,49 @@ function validateSettings() {
   }
 }
 
+function updateStatsDisplay() {
+  const flipCountDisplay = document.getElementById("flipCountDisplay");
+  const matchedPairsDisplay = document.getElementById("matchedPairsDisplay");
+  const timerDisplay = document.getElementById("timerDisplay");
+  if (flipCountDisplay) flipCountDisplay.textContent = flipCount;
+  if (matchedPairsDisplay) matchedPairsDisplay.textContent = `${matchedPairs}/${totalPairs}`;
+  if (timerDisplay) timerDisplay.textContent = formatTime(elapsedSeconds);
+}
+
+function formatTime(seconds) {
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+}
+
+function startTimer() {
+  if (gameTimer) clearInterval(gameTimer);
+  gameTimer = setInterval(() => {
+    elapsedSeconds++;
+    updateStatsDisplay();
+  }, 1000);
+}
+
 async function handlePlayClick() {
+  // Reset game state and stats
+  resetGameState();
+  updateStatsDisplay();
+
   // Show loading spinner
   loadingModal.show();
 
   try {
     const data = await fetchNasaImages();
-
     const filteredImages = filterImages(data);
     // Create pairs and shuffle using Fisher-Yates
     const shuffledPairs = createPairs(filteredImages);
     displayImages(shuffledPairs);
+    // Set totalPairs and update stats again
+    totalPairs = shuffledPairs.length / 2;
+    updateStatsDisplay();
+    // Start timer
+    startTimer();
+    gameStarted = true;
   } catch (error) {
     // Determine error type
     if (error.message === "API") {
@@ -246,6 +281,49 @@ async function handlePlayClick() {
     // Hide loading spinner
     loadingModal.hide();
   }
+}
+
+function checkWinCondition() {
+  if (matchedPairs === totalPairs) {
+    clearInterval(gameTimer);
+    gameTimer = null;
+    saveScore();
+    showGameOverModal();
+  }
+}
+
+function saveScore() {
+  const player = playerName.value.trim() || 'Anonymous';
+  const score = matchedPairs; // You can use flipCount or another metric if you want
+  let scores = JSON.parse(localStorage.getItem('memoryGameScores') || '[]');
+  scores.push({ player, score });
+  // Sort descending by score, keep only top 10
+  scores = scores.sort((a, b) => b.score - a.score).slice(0, 10);
+  localStorage.setItem('memoryGameScores', JSON.stringify(scores));
+}
+
+function showGameOverModal() {
+  // Get scores and sort
+  let scores = JSON.parse(localStorage.getItem('memoryGameScores') || '[]');
+  const player = playerName.value.trim() || 'Anonymous';
+  const score = matchedPairs;
+  // Find player rank
+  const rank = scores.findIndex(s => s.player === player && s.score === score) + 1;
+  // Build table rows for top 3
+  let rows = '';
+  scores.slice(0, 3).forEach((s, i) => {
+    rows += `<tr><td>${i + 1}</td><td>${s.player}</td><td>${s.score}</td></tr>`;
+  });
+  // Fill modal content
+  document.getElementById('gameOverStats').innerHTML = `
+    <div>Number of cards played: ${totalPairs * 2}</div>
+    <div>Number of attempts: ${flipCount}</div>
+    <div>Score: ${score}. You are ranked ${rank} out of ${scores.length}</div>
+  `;
+  document.getElementById('gameOverTableBody').innerHTML = rows;
+  // Show modal
+  const modal = new bootstrap.Modal(document.getElementById('gameOverModal'));
+  modal.show();
 }
 
 function bindEvents() {

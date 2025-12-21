@@ -124,6 +124,24 @@
     <!-- NASA Images Container -->
     <div class="row mt-4" id="nasaImagesContainer">
       <h3>NASA Astronomy Pictures</h3>
+      <!-- Game Statistics -->
+      <div id="gameStats" class="d-flex gap-4 mb-3">
+        <div class="text-center">
+          <span class="badge bg-primary fs-6">
+            Flips: <span id="flipCountDisplay">0</span>
+          </span>
+        </div>
+        <div class="text-center">
+          <span class="badge bg-success fs-6">
+            Pairs: <span id="matchedPairsDisplay">0/0</span>
+          </span>
+        </div>
+        <div class="text-center">
+          <span class="badge bg-info fs-6">
+            Time: <span id="timerDisplay">00:00</span>
+          </span>
+        </div>
+      </div>
       <div class="row" id="imagesRow"></div>
     </div>
 
@@ -176,7 +194,54 @@
             <p id="errorMessage" class="text-danger mb-0"></p>
           </div>
           <div class="modal-footer border-0">
-            <button type="button" class="btn btn-primary" id="retryButton">Try Again</button>
+            <button type="button" class="btn btn-primary" id="retryButton">
+              Try Again
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Game Over Modal -->
+    <div
+      class="modal fade"
+      id="gameOverModal"
+      tabindex="-1"
+      aria-labelledby="gameOverModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header bg-info">
+            <h5 class="modal-title" id="gameOverModalLabel">Game Over!</h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <div id="gameOverStats" class="mb-3"></div>
+            <table class="table table-bordered">
+              <thead>
+                <tr>
+                  <th>Rank</th>
+                  <th>Player</th>
+                  <th>Score</th>
+                </tr>
+              </thead>
+              <tbody id="gameOverTableBody"></tbody>
+            </table>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-primary"
+              data-bs-dismiss="modal"
+            >
+              Ok
+            </button>
           </div>
         </div>
       </div>
