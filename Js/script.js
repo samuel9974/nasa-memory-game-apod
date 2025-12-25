@@ -1,6 +1,6 @@
 const API_KEY = "5L4zgX5wTupy0j22joETfoZccJgdmAJUcoiZ6byy";
-const DEFAULT_ROWS = 4;
-const DEFAULT_COLS = 4;
+const DEFAULT_ROWS = 2;
+const DEFAULT_COLS = 2;
 
 // ============================================
 // GAME STATE - Variables to track game progress
@@ -19,7 +19,7 @@ let gameStarted = false; // Flag to know if first card was clicked
 // ============================================
 
 // Function to reset all game state (called when starting new game)
-function resetGameState() {
+const resetGameState = () => {
   flippedCards = [];
   matchedPairs = 0;
   flipCount = 0;
@@ -32,27 +32,27 @@ function resetGameState() {
     clearInterval(gameTimer);
     gameTimer = null;
   }
-}
+};
 
 // Get the delay setting from the dropdown (in milliseconds)
-function getDelayMs() {
+const getDelayMs = () => {
   const delaySelect = document.getElementById("delay");
   const delaySeconds = parseFloat(delaySelect.value) || 1;
   return delaySeconds * 1000; // Convert to milliseconds
-}
+};
 
-function getImageCount() {
+const getImageCount = () => {
   const rows = parseInt(numRows.value) || DEFAULT_ROWS;
   const cols = parseInt(numColumns.value) || DEFAULT_COLS;
   // Divide by 2 because each image will be duplicated to create pairs
   return (rows * cols) / 2;
-}
+};
 
-function buildApiUrl(count) {
+const buildApiUrl = (count) => {
   return `https://api.nasa.gov/planetary/apod?api_key=${API_KEY}&count=${count}`;
-}
+};
 
-async function fetchNasaImages() {
+const fetchNasaImages = async () => {
   const count = getImageCount();
   const response = await fetch(buildApiUrl(count));
 
@@ -63,52 +63,63 @@ async function fetchNasaImages() {
 
   const data = await response.json();
   return data;
-}
+};
 
-function filterImages(images) {
+const filterImages = (images) => {
   return images.filter((image) => image.media_type === "image");
-}
+};
 
 // Fisher-Yates shuffle algorithm for random card arrangement
-function shuffleArray(array) {
+const shuffleArray = (array) => {
   const shuffled = [...array];
   for (let i = shuffled.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
   }
   return shuffled;
-}
+};
 
 // Create pairs of cards and shuffle them
-function createPairs(images) {
+const createPairs = (images) => {
   const pairs = [...images, ...images];
   const shuffledPairs = shuffleArray(pairs);
   return shuffledPairs;
-}
+};
 
 // ============================================
 // DOM - All DOM manipulations and updates
 // ============================================
-const imagesRow = document.getElementById("imagesRow");
-const playButton = document.getElementById("playButton");
-const formSection = document.getElementById("formSection");
-const playerName = document.getElementById("playerName");
-const numRows = document.getElementById("numRows");
-const numColumns = document.getElementById("numColumns");
-const validationError = document.getElementById("validationError");
-const loadingModal = new bootstrap.Modal(document.getElementById("loadingModal"));
-const errorModal = new bootstrap.Modal(document.getElementById("errorModal"));
-const errorMessage = document.getElementById("errorMessage");
-const retryButton = document.getElementById("retryButton");
 
-function getColumnClass() {
+  let imagesRow = document.getElementById("imagesRow");
+  let playButton = document.getElementById("playButton");
+  let formSection = document.getElementById("formSection");
+  let playerName = document.getElementById("playerName");
+  let numRows = document.getElementById("numRows");
+  let numColumns = document.getElementById("numColumns");
+  let validationError = document.getElementById("validationError");
+  let loadingModal = new bootstrap.Modal(document.getElementById("loadingModal"));
+  let errorModal = new bootstrap.Modal(document.getElementById("errorModal"));
+  let errorMessage = document.getElementById("errorMessage");
+  let retryButton = document.getElementById("retryButton");
+  let highScoresButton = document.getElementById("highScoresButton");
+  let leaderboardTableBody = document.getElementById("leaderboardTableBody");
+  let leaderboardModal = new bootstrap.Modal(document.getElementById("leaderboardModal"));
+  let nasaImagesContainer = document.getElementById("nasaImagesContainer");
+  let settingsModal = new bootstrap.Modal(document.getElementById("settingsModal"));
+  let flipCountDisplay = document.getElementById("flipCountDisplay");
+  let matchedPairsDisplay = document.getElementById("matchedPairsDisplay");
+  let timerDisplay = document.getElementById("timerDisplay");
+  let gameOverStats = document.getElementById("gameOverStats");
+  let gameOverTableBody = document.getElementById("gameOverTableBody");
+
+const getColumnClass = () => {
   const cols = parseInt(numColumns.value) || DEFAULT_COLS;
   // Bootstrap uses 12-column grid, calculate width per card
   const colSize = Math.floor(12 / cols);
   return `col-${colSize} mb-3`;
-}
+};
 
-function createImageCard(image) {
+const createImageCard = (image) => {
   const col = document.createElement("div");
   col.className = getColumnClass();
 
@@ -128,12 +139,14 @@ function createImageCard(image) {
 
   // Add click event to flip the card
   const flipCard = col.querySelector(".flip-card ");
+  console.log("Adding click event to card:");
+  console.log(flipCard);
   flipCard.addEventListener("click", () => handleCardClick(flipCard));
 
   return col;
-}
+};
 
-function displayImages(images) {
+const displayImages = (images) => {
   imagesRow.innerHTML = "";
 
   images.forEach((image) => {
@@ -143,12 +156,12 @@ function displayImages(images) {
 
   // Set total pairs for win condition
   totalPairs = images.length / 2;
-}
+};
 
 // ============================================
 // UI - User interactions and event coordination
 // ============================================
-function showError(errorType) {
+const showError = (errorType) => {
   let message;
 
   if (errorType === "network") {
@@ -161,9 +174,9 @@ function showError(errorType) {
 
   errorMessage.textContent = message;
   errorModal.show();
-}
+};
 
-function handleCardClick(card) {
+const handleCardClick = (card) => {
   // Validation: prevent invalid clicks
   if (isChecking) return; // Don't allow clicks while checking for match
   if (!card.classList.contains("flipped")) return; // Only allow clicking face-down cards
@@ -173,6 +186,7 @@ function handleCardClick(card) {
   // Flip the card (remove flipped class to show image)
   card.classList.remove("flipped");
   flippedCards.push(card);
+  filterImages.imageUrl = card.getAttribute("data-image-url");
   flipCount++;
 
   // If two cards are flipped, check for match
@@ -187,10 +201,10 @@ function handleCardClick(card) {
       handleNoMatch(firstCard, secondCard);
     }
   }
-}
+};
 
 // Handle when two cards match
-function handleMatch(firstCard, secondCard) {
+const handleMatch = (firstCard, secondCard) => {
   firstCard.classList.add("matched");
   secondCard.classList.add("matched");
   matchedPairs++;
@@ -198,10 +212,10 @@ function handleMatch(firstCard, secondCard) {
   isChecking = false;
   updateStatsDisplay();
   checkWinCondition();
-}
+};
 
 // Handle when two cards do not match
-function handleNoMatch(firstCard, secondCard) {
+const handleNoMatch = (firstCard, secondCard) => {
   const delay = getDelayMs();
   setTimeout(() => {
     firstCard.classList.add("flipped");
@@ -210,10 +224,9 @@ function handleNoMatch(firstCard, secondCard) {
     isChecking = false;
     // Next step: allow player to continue
   }, delay);
-}
+};
 
-
-function validateSettings() {
+const validateSettings = () => {
   const rows = parseInt(numRows.value) || DEFAULT_ROWS;
   const cols = parseInt(numColumns.value) || DEFAULT_COLS;
   const totalCards = rows * cols;
@@ -225,32 +238,53 @@ function validateSettings() {
     validationError.style.display = "none";
     return true;
   }
-}
+};
 
-function updateStatsDisplay() {
+const updateStatsDisplay = () => {
   const flipCountDisplay = document.getElementById("flipCountDisplay");
   const matchedPairsDisplay = document.getElementById("matchedPairsDisplay");
   const timerDisplay = document.getElementById("timerDisplay");
   if (flipCountDisplay) flipCountDisplay.textContent = flipCount;
-  if (matchedPairsDisplay) matchedPairsDisplay.textContent = `${matchedPairs}/${totalPairs}`;
+  if (matchedPairsDisplay)
+    matchedPairsDisplay.textContent = `${matchedPairs}/${totalPairs}`;
   if (timerDisplay) timerDisplay.textContent = formatTime(elapsedSeconds);
-}
+};
 
-function formatTime(seconds) {
+const formatTime = (seconds) => {
   const mins = Math.floor(seconds / 60);
   const secs = seconds % 60;
-  return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-}
+  return `${mins.toString().padStart(2, "0")}:${secs
+    .toString()
+    .padStart(2, "0")}`;
+};
 
-function startTimer() {
+const startTimer = () => {
   if (gameTimer) clearInterval(gameTimer);
   gameTimer = setInterval(() => {
     elapsedSeconds++;
     updateStatsDisplay();
   }, 1000);
-}
+};
 
-async function handlePlayClick() {
+const handlePlayClick = async () => {
+  // Validate player name: only letters and digits allowed
+  const nameValue = playerName.value.trim();
+  const nameRegex = /^[A-Za-z0-9]+$/;
+  if (!nameValue || !nameRegex.test(nameValue)) {
+    validationError.textContent =
+      "Please enter a valid name (letters and digits only).";
+    validationError.style.display = "block";
+    playerName.classList.add("is-invalid");
+    playerName.focus();
+    return;
+  } else {
+    validationError.style.display = "none";
+    playerName.classList.remove("is-invalid");
+  }
+  // Hide the login form and show the game area
+  formSection.classList.add("d-none");
+  nasaImagesContainer.classList.remove("d-none");
+
   // Reset game state and stats
   resetGameState();
   updateStatsDisplay();
@@ -281,52 +315,56 @@ async function handlePlayClick() {
     // Hide loading spinner
     loadingModal.hide();
   }
-}
+};
 
-function checkWinCondition() {
+const checkWinCondition = () => {
   if (matchedPairs === totalPairs) {
     clearInterval(gameTimer);
     gameTimer = null;
+    // localStorage.removeItem("memoryGameScores");
     saveScore();
     showGameOverModal();
   }
-}
+};
 
-function saveScore() {
-  const player = playerName.value.trim() || 'Anonymous';
+const saveScore = () => {
+  const player = playerName.value.trim() || "Anonymous";
   const score = matchedPairs; // You can use flipCount or another metric if you want
-  let scores = JSON.parse(localStorage.getItem('memoryGameScores') || '[]');
+  let scores = JSON.parse(localStorage.getItem("memoryGameScores") || "[]");
+
   scores.push({ player, score });
+
   // Sort descending by score, keep only top 10
   scores = scores.sort((a, b) => b.score - a.score).slice(0, 10);
-  localStorage.setItem('memoryGameScores', JSON.stringify(scores));
-}
+  localStorage.setItem("memoryGameScores", JSON.stringify(scores));
+};
 
-function showGameOverModal() {
+const showGameOverModal = () => {
   // Get scores and sort
-  let scores = JSON.parse(localStorage.getItem('memoryGameScores') || '[]');
-  const player = playerName.value.trim() || 'Anonymous';
+  let scores = JSON.parse(localStorage.getItem("memoryGameScores") || "[]");
+  const player = playerName.value.trim() || "Anonymous";
   const score = matchedPairs;
   // Find player rank
-  const rank = scores.findIndex(s => s.player === player && s.score === score) + 1;
+  const rank =
+    scores.findIndex((s) => s.player === player && s.score === score) + 1;
   // Build table rows for top 3
-  let rows = '';
+  let rows = "";
   scores.slice(0, 3).forEach((s, i) => {
     rows += `<tr><td>${i + 1}</td><td>${s.player}</td><td>${s.score}</td></tr>`;
   });
   // Fill modal content
-  document.getElementById('gameOverStats').innerHTML = `
+  document.getElementById("gameOverStats").innerHTML = `
     <div>Number of cards played: ${totalPairs * 2}</div>
     <div>Number of attempts: ${flipCount}</div>
     <div>Score: ${score}. You are ranked ${rank} out of ${scores.length}</div>
   `;
-  document.getElementById('gameOverTableBody').innerHTML = rows;
+  document.getElementById("gameOverTableBody").innerHTML = rows;
   // Show modal
-  const modal = new bootstrap.Modal(document.getElementById('gameOverModal'));
+  const modal = new bootstrap.Modal(document.getElementById("gameOverModal"));
   modal.show();
-}
+};
 
-function bindEvents() {
+const bindEvents = () => {
   playButton.addEventListener("click", handlePlayClick);
   retryButton.addEventListener("click", () => {
     errorModal.hide();
@@ -334,13 +372,62 @@ function bindEvents() {
   });
   numRows.addEventListener("change", validateSettings);
   numColumns.addEventListener("change", validateSettings);
-}
 
-function init() {
+  // Close settings modal on Save Settings click
+  const saveSettingsBtn = document.querySelector(
+    "#settingsModal .btn.btn-primary"
+  );
+  const settingsModalEl = document.getElementById("settingsModal");
+
+  let settingsModalInstance = null;
+  if (settingsModalEl) {
+    settingsModalInstance =
+      bootstrap.Modal.getOrCreateInstance(settingsModalEl);
+  }
+  if (saveSettingsBtn && settingsModalInstance) {
+    saveSettingsBtn.addEventListener("click", () => {
+      settingsModalInstance.hide();
+    });
+  }
+
+  // Show leaderboard modal on High Scores click
+  if (highScoresButton) {
+    highScoresButton.addEventListener("click", showLeaderboard);
+  }
+};
+
+const showLeaderboard = () => {
+  // Get scores and sort
+  let scores = JSON.parse(localStorage.getItem("memoryGameScores") || "[]");
+  scores = scores.sort((a, b) => b.score - a.score).slice(0, 3);
+  let rows = "";
+  scores.forEach((s, i) => {
+    rows += `<tr><td>${i + 1}</td><td>${s.player}</td><td>${s.score}</td></tr>`;
+  });
+  leaderboardTableBody.innerHTML = rows;
+  leaderboardModal.show();
+};
+
+const init = () => {
   bindEvents();
-}
+};
 
 // ============================================
 // Initialize app when DOM is ready
 // ============================================
-document.addEventListener("DOMContentLoaded", init);
+document.addEventListener("DOMContentLoaded", function () {
+  init();
+  const backToLoginGameButton = document.getElementById(
+    "backToLoginGameButton"
+  );
+  if (backToLoginGameButton) {
+    backToLoginGameButton.addEventListener("click", function () {
+      // Show the login form
+      if (formSection) formSection.classList.remove("d-none");
+      // Hide the game area
+      if (nasaImagesContainer) nasaImagesContainer.classList.add("d-none");
+      // Optionally reset the game state or clear images
+      if (imagesRow) imagesRow.innerHTML = "";
+    });
+  }
+});
